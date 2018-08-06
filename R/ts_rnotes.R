@@ -3,6 +3,10 @@
 # %>% essentially means "then" - continuing a function to next operation.
 # df = dataframe - refers to your dataset that you are using, assuming it is named df
 
+
+
+## added a note
+
 # to check what packages are installed
 installed.packages()
 
