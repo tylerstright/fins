@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Generate outplant data for all NPT Programs
+# Generate outplant summaries for all NPT Programs
 #
 #                                                 ><(((*>   ><>  ~
 # Author: Tyler Stright
@@ -23,17 +23,17 @@ npt_outplants <- fins_data %>%
   arrange(Trap_Year) %>%
   ungroup() %>%
   group_by(Facility, weir, Trap_Year, Species, Release_stream) %>%
-  summarise(n = sum(count))
+  summarise(total_outplants = sum(count))
 
 
 # Takes npt_outplants and plots data in a Graph
 outplant_bars <- npt_outplants %>%
   ggplot(aes(x = Trap_Year, y = n,  fill = Release_stream, colour = Release_stream)) +
   geom_bar(stat = 'identity') +
-  #geom_line() +
+ # geom_line() +
   facet_wrap(~Trap) +
   theme_bw()
 
 # To save above graph:
-ggsave("outplant_bars.png", outplant_bars, path = "./data")
+# ggsave("outplant_bars.png", outplant_bars, path = "./data")
 
