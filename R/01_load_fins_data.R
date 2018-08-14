@@ -15,12 +15,12 @@ library(stringr)
 # load FINS data.
 data <- read_excel('./data/MODIFIED UNIQUE All_Research_FINS_data_standardized.xlsx')
 # OR Tyler's
-data <- read_excel('C:/TylerS Sync/FINS Info/R_Fins/data/MODIFIED UNIQUE All_Research_FINS_data_standardized.xlsx')
+data <- read_excel('C:/TylerS Sync/FINS Info/fins/data/MODIFIED UNIQUE All_Research_FINS_data_standardized.xlsx')
 
 # load NPT Mark/Tag Protocol. label df: mt_protocol
 mt_protocol <- read_excel('./data/NPT Mark and Tag Protocol.xlsx')
 # OR Tyler's
-mt_protocol <- read_excel('C:/TylerS Sync/FINS Info/R_Fins/data/NPT Mark and Tag Protocol.xlsx')
+mt_protocol <- read_excel('C:/TylerS Sync/FINS Info/fins/data/NPT Mark and Tag Protocol.xlsx')
 
 #------------------------------------------------------------------------------
 # Create dataframe for `StreamName` associated with `weir`
@@ -55,4 +55,4 @@ fins_data <- data %>%
 #------------------------------------------------------------------------------
 save(fins_data, file = 'C:/R input/fins_data.Rda')
 save(fins_data, file = './data/fins_data.Rda')
-save(fins_data, file = 'C:/TylerS Sync//FINS Info/R_Fins/data/fins_data.Rda')      
+save(fins_data, file = 'C:/TylerS Sync//FINS Info/fins/data/fins_data.Rda')      

@@ -18,12 +18,13 @@ con <- odbcConnect('sgs_master', uid = 'guest', pwd = 'guest') # named dsn in ad
       sql_carcassdetail <- sqlFetch(con, 'carcass_detail')
 #------------------------------------------------------------------------------
         # Save ****RAW**** Data
-          save(sql_carcassdetail, file = 'C:/TylerS Sync//FINS Info/R_Fins/data/sql_carcassdetailraw.Rda')
+          save(sql_carcassdetail, file = 'C:/TylerS Sync/FINS Info/fins/data/sql_carcassdetailraw.Rda')
 #------------------------------------------------------------------------------
-# Summarize carcass_detail for captures and recaptures
+
+# Summarize carcass_detail (NPT SGS) for captures and recaptures
 
 carcass_mod <- sql_carcassdetail  %>%
-  mutate(Trap_Year = SurveyYear)        # column for joining with 'fins_data'
+  mutate(Trap_Year = SurveyYear)
 
 carcass_recaps <- carcass_mod  %>%
   filter(Recapture == 'Yes') %>%
@@ -45,7 +46,7 @@ rm(carcass_mod, carcass_recaps, carcass_caps)
 # import lostine Mark/Tag Protocol
 lostine_protocol <- read_excel('./data/Lostine River Weir Mark and Tag Protocol.xlsx')
 # OR Tyler's
-lostine_protocol <- read_excel('C:/TylerS Sync/FINS Info/R_Fins/data/Lostine River Weir Mark and Tag Protocol.xlsx')
+lostine_protocol <- read_excel('C:/TylerS Sync/FINS Info/fins/data/Lostine River Weir Mark and Tag Protocol.xlsx')
 #------------------------------------------------------------------------------
 # modify ODFW SGS data to have matching fields with 'fins_data' and Marking Protocol
 ODFWSGS <- rawODFWdata %>%

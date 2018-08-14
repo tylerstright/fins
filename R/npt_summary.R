@@ -15,7 +15,7 @@ load(file = './data/fins_data.Rda')
 purpose.list <- c('Biological Sampling', 'Brood Stock', 'Distribution', 
                   'Fisheries','General Holding', 'Natural Spawning', 
                   'Nutrient Enhancement', 'Other', 'Recycled', 'Stray Removal', 
-                  'Stray Relocation', 'Stray Removal Relocation', 'Unknown', 
+                  'Stray Relocation', 'Stray Removal Distribution', 'Unknown', 
                   'Within FINS Facility' )
 # Summarize count of fish with same "Purpose"
 npt_purpose <- fins_data %>%
