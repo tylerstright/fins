@@ -8,6 +8,7 @@
 
 # load packages
 library(tidyverse)
+library(readxl)
 library(RODBC)
 
 #------------------------------------------------------------------------------
@@ -18,7 +19,7 @@ con <- odbcConnect('sgs_master', uid = 'guest', pwd = 'guest') # named dsn in ad
       sql_carcassdetail <- sqlFetch(con, 'carcass_detail')
 #------------------------------------------------------------------------------
         # Save ****RAW**** Data
-          save(sql_carcassdetail, file = 'C:/TylerS Sync/FINS Info/fins/data/sql_carcassdetailraw.Rda')
+          save(sql_carcassdetail, file = './data/sql_carcassdetailraw.Rda')
 #------------------------------------------------------------------------------
 
 # Summarize carcass_detail (NPT SGS) for captures and recaptures
@@ -36,17 +37,16 @@ carcass_caps <- carcass_mod  %>%
   group_by(StreamName, Trap_Year) %>%
   summarise(c_captures = n())            
             
-tmp <- left_join(carcass_recaps, carcass_caps)
+tmpnpt_sgs <- left_join(carcass_recaps, carcass_caps)
 
 rm(carcass_mod, carcass_recaps, carcass_caps)
 
 #------------------------------------------------------------------------------
 # Import/Summarize captures and recaptures for LOSTINE RIVER (ODFW SGS)
+rawODFWdata <- read_excel('./data/ODFW SGS 1998-2018.xlsx')
 
-# import lostine Mark/Tag Protocol
+# import Lostine Mark/Tag Protocol
 lostine_protocol <- read_excel('./data/Lostine River Weir Mark and Tag Protocol.xlsx')
-# OR Tyler's
-lostine_protocol <- read_excel('C:/TylerS Sync/FINS Info/fins/data/Lostine River Weir Mark and Tag Protocol.xlsx')
 #------------------------------------------------------------------------------
 # modify ODFW SGS data to have matching fields with 'fins_data' and Marking Protocol
 ODFWSGS <- rawODFWdata %>%
@@ -74,7 +74,7 @@ lostine_sgs <- left_join(lostine_captures, lostine_recaps)
 rm(tmpODFWSGS, lostine_captures, lostine_recaps)
 #------------------------------------------------------------------------------
 # Join NPT SGS and ODFW (Lostine) SGS summaries
-sgs_cr <- bind_rows(tmp, lostine_sgs)
+sgs_cr <- bind_rows(tmpnpt_sgs, lostine_sgs)
 
 #------------------------------------------------------------------------------
 # Get number of upstream fish that were released with a mark

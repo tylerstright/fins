@@ -6,18 +6,12 @@
 # Created: 7/30/18
 #------------------------------------------------------------------------------
 
-# load packages
+# load packages and FINS data
 library(tidyverse)
 
-# Fins data
 load(file = './data/fins_data.Rda')
 
-# Creating the dataframe for all newly captured Steelhead  
-# newcaptured_steelhead <- tempdata %>%
-#   filter(Species == 'Steelhead') %>%
-#   filter(Recap != 'TRUE') %>%
-#   select(weir, Trap, Trap_Year, Species, Origin, `Living Status`, Disposition, Purpose, `Moved To`, Count, `Applied Marks`, `Applied Tags`, `Applied PIT`) %>%
-#   group_by(weir, Trap_Year) %>%
+#------------------------------------------------------------------------------
 
 # Get number of upstream fish that were released with a mark
 marks <- fins_data %>%
@@ -28,12 +22,11 @@ marks <- fins_data %>%
   group_by(weir, Trap_Year) %>%
   summarise(Marks = sum(Count))
   
-# Get number of downstream moving fish without marks = Captures - doesn't include recaptures
+# Get number of downstream moving fish without marks: Captures
 captures <- fins_data %>%
   filter(Species == 'Steelhead') %>%
   filter(`Moved To` == 'Downstream') %>%
-  #filter(Marks == FALSE) %>% # no applied marks
-  filter(Recap == FALSE) %>% # first capture
+  filter(Recap == FALSE) %>% 
   group_by(weir, Trap_Year) %>%
   summarise(Captures = sum(Count))
 
@@ -42,7 +35,7 @@ recaptures<- fins_data %>%
   filter(Species == 'Steelhead') %>%
   filter(`Moved To` == 'Downstream') %>%
   filter(Recap == 'TRUE') %>%
-   mutate(fishid = as.character(1:n()),  # create unique fish id - need to move to the entire fins dataset
+   mutate(fishid = as.character(1:n()),  # create unique fish id
          UniqueFishID = (ifelse(!is.na(`Existing PIT`), `Existing PIT`, fishid))) %>%
   select(-fishid) %>%
   arrange(desc(UniqueFishID), `Trapped Date`) %>% # arrange in order of capture events
@@ -50,7 +43,7 @@ recaptures<- fins_data %>%
   group_by(weir, Trap_Year) %>%
   summarise(Recaptures = sum(Count))
     
-   
+# Join dataframes and make calculations   
 steelhead_mcr <- left_join(marks, captures) %>%
                     left_join(recaptures) %>%
   mutate(Captures = ifelse(is.na(Captures), 0, Captures),
@@ -62,6 +55,7 @@ steelhead_mcr <- left_join(marks, captures) %>%
          lower95 = Nhat - 1.96*sqrt(Vhat),
          upper95 = Nhat + 1.96*sqrt(Vhat)) 
 
+# Graph
 ggplot(steelhead_mcr, aes(x = Trap_Year, y = Nhat, colour = weir)) +
   geom_point(size = 2, position = position_dodge(width = .2)) +
   geom_errorbar(aes(ymin = lower95, ymax = upper95), position = position_dodge(width = .2)) +

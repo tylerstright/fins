@@ -24,8 +24,9 @@ npt_purpose <- fins_data %>%
   summarise(count = sum(Count)) %>%
   spread (key = Purpose, value = count) 
 #------------------------------------------------------------------------------
-# create list of mortality types
+# Create list of mortality types
 all.morts <- c('Trap Mort', 'DOA', 'Killed')
+
 # Summarize count of Killed, Trap Mort, DOA and Total dead fish records
 npt_deadfish <- fins_data %>%
   filter(`Living Status` %in% all.morts) %>%
@@ -37,5 +38,6 @@ npt_deadfish <- fins_data %>%
   arrange(weir, desc(Trap_Year))
 
 #------------------------------------------------------------------------------
-# Joins two tables to create a count for all mortalities and fish destined for the same purposes
+# Joins two tables to create a count for all mortalities and fish destined for 
+# the same purpose
 npt_summary <- left_join(npt_purpose, npt_deadfish)
