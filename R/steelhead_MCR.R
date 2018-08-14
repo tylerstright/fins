@@ -63,4 +63,4 @@ ggplot(steelhead_mcr, aes(x = Trap_Year, y = Nhat, colour = weir)) +
   theme_bw()
 
 # Save steelhead_mcr as a CSV
-write.csv(chinook_mcr, file = './data/steelhead_mcr.csv')
+write.csv(steelhead_mcr, file = './data/steelhead_mcr.csv')

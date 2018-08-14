@@ -3,9 +3,12 @@
 # %>% essentially means "then" - continuing a function to next operation.
 # df = dataframe - refers to your dataset that you are using, assuming it is named df
 
+# load packages
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(stringr)
 
-
-## added a note
 
 # to check what packages are installed
 installed.packages()
@@ -32,4 +35,9 @@ disp_purp <- gather(data, key= metric, value= x)
 # This will select fields from Facility to Species, Release_stream to disp_purp
 select(Facility:Species, Release_stream:disp_purp) %>%
   # this selects all but "Action" field, and renames "location" to "Release_location"
-  select(-Action, Release_location = location) %>%
+  select(-Action, Release_location = location)
+
+
+which(is.na(df$field))   # this will tell you which ROWS are 'NA' for the specified field.
+
+which(is.null(df$field))  # this will tell you which rows are NULL for the specified field.

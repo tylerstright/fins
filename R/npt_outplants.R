@@ -38,4 +38,4 @@ outplant_bars <- npt_outplants %>%
 ggsave("outplant_bars.png", outplant_bars, path = "./data")
 
 # Save npt_outplants as a CSV
-write.csv(chinook_mcr, file = './data/npt_outplants.csv')
+write.csv(npt_outplants, file = './data/npt_outplants.csv')

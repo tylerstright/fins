@@ -43,4 +43,4 @@ npt_deadfish <- fins_data %>%
 npt_summary <- left_join(npt_purpose, npt_deadfish)
 
 # Save npt_summary as a CSV
-write.csv(chinook_mcr, file = './data/npt_summary.csv')
+write.csv(npt_summary, file = './data/npt_summary.csv')
