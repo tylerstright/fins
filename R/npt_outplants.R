@@ -15,17 +15,24 @@ load(file = './data/fins_data.Rda')
 #### this filters to show all Outplants in streams for all years.
 npt_outplants <- fins_data %>%
   filter(grepl('Outplant', `Moved To`)) %>% # filter by `Moved To` values containing: Outplant
-  group_by(Facility, weir, Trap_Year, Species, `Moved To`, Disposition, Purpose) %>%
+  group_by(weir, Trap_Year, Species, `Moved To`, Disposition, Purpose) %>%
   summarise(count = n()) %>%
   separate(`Moved To`, into = c('Action', 'Release_location'), sep = " - ") %>%
   separate(Release_location, into = c('Release_stream', 'location'), sep = ": ") %>%
   select(-Action, Release_location = location) %>%
   arrange(Trap_Year) %>%
   ungroup() %>%
-  group_by(Facility, weir, Trap_Year, Species, Release_stream) %>%
+  group_by(Weir = weir, Trap_Year, Species, Release_stream) %>%
   summarise(n = sum(count))
 
+# change arrangement of dataframe
+npt_outplants <- spread(npt_outplants, key = Trap_Year, value = n,  fill = '', 
+                        convert = FALSE, drop = TRUE, sep = NULL)
+#------------------------------------------------------------------------------
+# Save npt_outplants as a CSV
+write.csv(npt_outplants, file = './data/npt_outplants.csv')
 
+#------------------------------------------------------------------------------
 # Takes npt_outplants and plots data in a Graph
 outplant_bars <- npt_outplants %>%
   ggplot(aes(x = Trap_Year, y = n,  fill = Release_stream, colour = Release_stream)) +
@@ -37,5 +44,4 @@ outplant_bars <- npt_outplants %>%
 # To save above graph:
 ggsave("outplant_bars.png", outplant_bars, path = "./data")
 
-# Save npt_outplants as a CSV
-write.csv(npt_outplants, file = './data/npt_outplants.csv')
+

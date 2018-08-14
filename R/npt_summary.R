@@ -33,9 +33,13 @@ npt_deadfish <- fins_data %>%
   group_by(weir, Trap_Year, `Living Status`, Species, `Moved To Facility`) %>%
   summarise(morts = sum(Count)) %>%
   spread(key = `Living Status`, value = morts, fill = 0 ) %>%
-  select(weir, Trap_Year, `Moved To Facility`, `Trap Mort`, DOA, Killed) %>%
-  mutate(total_morts = `Trap Mort` + DOA + Killed) %>%
-  arrange(weir, desc(Trap_Year))
+  select(Weir = weir, Trap_Year, Species, `Trap Mort`, DOA, Killed) %>%
+  mutate(Total_morts = `Trap Mort` + DOA + Killed) %>%
+  arrange(Weir, desc(Trap_Year))
+
+# Save npt_deadfish as a CSV
+write.csv(npt_deadfish, file = './data/npt_mortalities.csv')
+
 
 #------------------------------------------------------------------------------
 # Joins two tables to create a count for all mortalities and fish destined for 

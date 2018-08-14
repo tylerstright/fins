@@ -47,6 +47,7 @@ recaptures<- fins_data %>%
 steelhead_mcr <- left_join(marks, captures) %>%
                     left_join(recaptures) %>%
   mutate(Captures = ifelse(is.na(Captures), 0, Captures),
+         Recaptures = ifelse(is.na(Recaptures), 0, Recaptures),
          n1 = Marks,
          n2 = Captures + Recaptures,
          m2 = Recaptures,
