@@ -3,7 +3,7 @@
 # 
 #                                                ><(((*>   ><>  ~
 # Author: Tyler Stright
-# Created: 
+# Created: 8/8/18
 #------------------------------------------------------------------------------
 # load packages and FINS data
 library(tidyverse)
@@ -16,13 +16,13 @@ purpose.list <- c('Biological Sampling', 'Brood Stock', 'Distribution',
                   'Fisheries','General Holding', 'Natural Spawning', 
                   'Nutrient Enhancement', 'Other', 'Recycled', 'Stray Removal', 
                   'Stray Relocation', 'Stray Removal Distribution', 'Unknown', 
-                  'Within FINS Facility' )
+                  'Within FINS Facility')
 # Summarize count of fish with same "Purpose"
 npt_purpose <- fins_data %>%
   filter(Purpose %in% purpose.list) %>%
   group_by(weir, Trap_Year, Purpose, Species, `Moved To Facility`) %>%
   summarise(count = sum(Count)) %>%
-  spread (key = Purpose, value = count) 
+  spread (key = Purpose, value = count)
 #------------------------------------------------------------------------------
 # Create list of mortality types
 all.morts <- c('Trap Mort', 'DOA', 'Killed')
@@ -41,3 +41,6 @@ npt_deadfish <- fins_data %>%
 # Joins two tables to create a count for all mortalities and fish destined for 
 # the same purpose
 npt_summary <- left_join(npt_purpose, npt_deadfish)
+
+# Save npt_summary as a CSV
+write.csv(chinook_mcr, file = './data/npt_summary.csv')

@@ -62,3 +62,5 @@ ggplot(steelhead_mcr, aes(x = Trap_Year, y = Nhat, colour = weir)) +
   facet_wrap(~weir, scale = 'free_y', drop = TRUE) +
   theme_bw()
 
+# Save steelhead_mcr as a CSV
+write.csv(chinook_mcr, file = './data/steelhead_mcr.csv')

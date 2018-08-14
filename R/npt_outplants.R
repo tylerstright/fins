@@ -37,3 +37,5 @@ outplant_bars <- npt_outplants %>%
 # To save above graph:
 ggsave("outplant_bars.png", outplant_bars, path = "./data")
 
+# Save npt_outplants as a CSV
+write.csv(chinook_mcr, file = './data/npt_outplants.csv')

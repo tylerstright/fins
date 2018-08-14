@@ -117,3 +117,5 @@ chinook_mcr <- left_join(chinook_mc, sgs_cr) %>%
 #    facet_wrap(~weir, scale = 'free_y', drop = TRUE) +
 #    theme_bw()
 
+# Save chinook_mcr as a CSV
+write.csv(chinook_mcr, file = './data/chinook_mcr.csv')
