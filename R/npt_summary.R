@@ -16,10 +16,11 @@ purpose.list <- c('Biological Sampling', 'Brood Stock', 'Distribution',
                   'Fisheries','General Holding', 'Natural Spawning', 
                   'Nutrient Enhancement', 'Other', 'Recycled', 'Stray Removal', 
                   'Stray Relocation', 'Stray Removal Distribution', 'Unknown', 
-                  'Within FINS Facility')
+                  'Within FINS Facility', NA)
 # Summarize count of fish with same "Purpose"
 npt_purpose <- fins_data %>%
   filter(Purpose %in% purpose.list) %>%
+  #filter(is.na(Purpose)) %>%
   group_by(weir, Trap_Year, Purpose, Species, `Moved To Facility`) %>%
   summarise(count = sum(Count)) %>%
   spread (key = Purpose, value = count)

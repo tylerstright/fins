@@ -48,5 +48,4 @@ fins_data <- data %>%
 #------------------------------------------------------------------------------
 # Save modified fins data
 #------------------------------------------------------------------------------
-save(fins_data, file = 'C:/R input/fins_data.Rda')
 save(fins_data, file = './data/fins_data.Rda')
