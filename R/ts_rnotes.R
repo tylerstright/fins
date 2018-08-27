@@ -9,6 +9,9 @@ library(readxl)
 library(lubridate)
 library(stringr)
 
+# Saving a file
+write.csv(chinook_mcr, file = './data/chinook_mcr.csv')
+
 
 # to check what packages are installed
 installed.packages()

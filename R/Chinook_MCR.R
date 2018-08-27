@@ -16,40 +16,38 @@ library(RODBC)
 con <- odbcConnect('sgs_master', uid = 'guest', pwd = 'guest') # named dsn in admin tools.
 #------------------------------------------------------------------------------
 #   Extract SQL carcass and transect database table  via above (con)nection
-      sql_carcassdetail <- sqlFetch(con, 'carcass_detail')
-      sql_transect_metadata <- sqlFetch(con, 'transect_metadata')
+sql_carcassdetail <- sqlFetch(con, 'carcass_detail')
+sql_transect_metadata <- sqlFetch(con, 'transect_metadata')
 #------------------------------------------------------------------------------
 # Filter and join transect metadata to carcass detail
 npt_transect <- sql_transect_metadata %>%
-  select(StreamName, TributaryTo, TransectName, AboveWeir, WeirSiteName)
+  select(StreamName, POP_NAME, TributaryTo, TransectName, AboveWeir, WeirSiteName)
 
 TransectJoin <- left_join(sql_carcassdetail, npt_transect) %>%
   mutate(Trap_Year = SurveyYear)
 
 npt_carcass <- TransectJoin %>%
   filter(AboveWeir == 'Yes') %>%  # filter for above weir carcasses
-  group_by(StreamName, Trap_Year, AboveWeir, Recapture) %>%
+  group_by(StreamName, POP_NAME, Trap_Year, AboveWeir, Recapture) %>%
   separate(WeirSiteName, into = c("StreamName", "Trap"), sep = " Weir")
-      
-              # Save ****RAW**** Data
-          save(npt_carcass, file = './data/sql_carcassdetailraw.Rda')
+
+# Save *above* joined SGS and Transect Data
+save(npt_carcass, file = './data/sql_carcassdetailraw.Rda')
 #------------------------------------------------------------------------------
 
 # Summarize npt_carcass (NPT SGS) for captures and recaptures
 
 carcass_recaps <- npt_carcass  %>%
   filter(Recapture == 'Yes') %>%
-  group_by(StreamName, Trap_Year) %>%
+  group_by(StreamName, POP_NAME, Trap_Year) %>%
   summarise(Carcass_recaptures = n())            
 
 carcass_caps <- npt_carcass  %>%
   filter(Recapture == 'No') %>%
-  group_by(StreamName, Trap_Year) %>%
+  group_by(StreamName, POP_NAME, Trap_Year) %>%
   summarise(Carcass_unmarked = n())            
-            
-tmpnpt_sgs <- left_join(carcass_recaps, carcass_caps)
 
-rm(carcass_mod, carcass_recaps, carcass_caps)
+tmpnpt_sgs <- left_join(carcass_recaps, carcass_caps)
 
 #------------------------------------------------------------------------------
 # Import/Summarize captures and recaptures for LOSTINE RIVER (ODFW SGS)
@@ -57,6 +55,12 @@ rawODFWdata <- read_excel('./data/ODFW SGS 1998-2018.xlsx')
 
 # import Lostine Mark/Tag Protocol
 lostine_protocol <- read_excel('./data/Lostine River Weir Mark and Tag Protocol.xlsx')
+
+# set dataframe to issue POP to lostine
+POP_NAME <- c('Wallowa River')
+weir <- c('Lostine River Weir')
+POP_lostine <- data.frame(POP_NAME, weir)
+lostine_protocol <- left_join(lostine_protocol, POP_lostine)
 #------------------------------------------------------------------------------
 # modify ODFW SGS data to have matching fields with 'fins_data' and Marking Protocol
 ODFWSGS <- rawODFWdata %>%
@@ -66,7 +70,6 @@ ODFWSGS <- rawODFWdata %>%
 
 tmpODFWSGS <- left_join(ODFWSGS, lostine_protocol) %>%
   mutate(Recap = ifelse(str_detect(`Opercle Punch Type`, mark_type), TRUE, FALSE))
-#Check the NA values
 
 # Summarize (ODFW) Lostine River SGS for captures and recaptures
 lostine_captures <- tmpODFWSGS %>%
@@ -80,8 +83,6 @@ lostine_recaps <- tmpODFWSGS %>%
   summarise(Carcass_recaptures = n())
 
 lostine_sgs <- left_join(lostine_captures, lostine_recaps)
-
-rm(tmpODFWSGS, lostine_captures, lostine_recaps)
 
 #------------------------------------------------------------------------------
 # Join NPT SGS and ODFW (Lostine) SGS summaries
@@ -114,7 +115,7 @@ chinook_marks <- fins_data %>%
 #------------------------------------------------------------------------------
 # Join summarized weir mark data with summarized SGS data, calculate estimates
 chinook_mcr <- left_join(chinook_marks, sgs_cr) %>%
-  select(Weir = weir, StreamName, Trap_Year, Weir_marks, Carcass_recaptures, Carcass_unmarked) %>%
+  select(weir, StreamName, POP_NAME, Trap_Year, Weir_marks, Carcass_recaptures, Carcass_unmarked) %>%
   mutate(Carcass_unmarked = ifelse(is.na(Carcass_unmarked), 0, Carcass_unmarked),
          Carcass_recaptures = ifelse(is.na(Carcass_recaptures), 0, Carcass_recaptures),
          n1 = Weir_marks,
@@ -131,5 +132,16 @@ chinook_mcr <- left_join(chinook_marks, sgs_cr) %>%
 #    facet_wrap(~weir, scale = 'free_y', drop = TRUE) +
 #    theme_bw()
 
+#------------------------------------------------------------------------------
+# Save chinook_mcr data
+save(chinook_mcr, file = './data/chinook_mcr.Rda')
+#------------------------------------------------------------------------------
+
 # Save chinook_mcr as a CSV
 write.csv(chinook_mcr, file = './data/chinook_mcr.csv')
+
+# Remove temporary clutter from workspace
+rm(tmpODFWSGS, lostine_captures, lostine_recaps, lostine_protocol, carcass_mod, 
+   carcass_recaps, carcass_caps, chinook_marks, sgs_cr, tmpnpt_sgs, tmpODFWSGS,
+   lostine_sgs, rawODFWdata)
+
