@@ -28,10 +28,12 @@ POP_weir <- data.frame(POP_NAME, weir)
 sql_ctw <- left_join(sql_transect_metadata, POP_weir) %>%
   select(StreamName, weir, POP_NAME, TransectName, AboveWeir) %>%
   group_by(StreamName, POP_NAME, weir, AboveWeir) %>%
-  left_join(sql_carcassdetail) %>%
+  inner_join(sql_carcassdetail) %>%
   mutate(Trap_Year = SurveyYear) %>%
   ungroup() %>%
   group_by(POP_NAME, Trap_Year)
+
+## SHOULD THIS BE AN INNER JOIN? ##
 #------------------------------------------------------------------------------
 #   Calculate Hatchery Fraction (ORIGIN)
 nat_spawn <- sql_ctw %>%    
