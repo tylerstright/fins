@@ -20,20 +20,20 @@ mt_protocol <- read_excel('./data/NPT Mark and Tag Protocol.xlsx')
 
 #------------------------------------------------------------------------------
 # Create dataframe for `StreamName` associated with `weir`
-#------------------------------------------------------------------------------
 weir <- c('Lolo Creek Weir', 'Joseph Creek Weir', 'Camp Creek Weir',
           'Imnaha River Weir', 'Freezeout Creek Weir', 'Gumboot Creek Weir', 
           'Dry Creek Weir', 'Johnson Creek Weir', 'NPT Hatchery Trap', 
-          'Lostine River Weir', 'Newsome Creek Weir', 'Lower Granite Dam Trap')
+          'Lostine River Weir', 'Newsome Creek Weir', 'Lower Granite Dam Trap',
+          'Bradford Weir (Lolo Creek)', 'Upper Lolo Creek Weir')
 StreamName <- c('Lolo Creek', 'Joseph Creek', 'Camp Creek', 'Imnaha River', 
                 'Freezeout Creek', 'Gumboot Creek', 'Dry Creek', 
                 'Johnson Creek', 'NPT Hatchery Trap', 'Lostine River', 
-                'Newsome Creek', 'Lower Granite Dam Trap')
+                'Newsome Creek', 'Lower Granite Dam Trap', 'Lolo Creek', 
+                'Lolo Creek')
 streams <- data.frame(weir, StreamName)
 
 #------------------------------------------------------------------------------
 # Combine fins data with protocol, StreamName, and create useable dataset
-#------------------------------------------------------------------------------
 fins_data <- data %>%
   separate(Trap, into = c("weir", "Trap"), sep = " - ") %>%
   mutate(Trap_Year = year(`Trapped Date`)) %>%
@@ -46,5 +46,4 @@ fins_data <- data %>%
 
 #------------------------------------------------------------------------------
 # Save modified fins data
-#------------------------------------------------------------------------------
 save(fins_data, file = './data/fins_data.Rda')
