@@ -25,18 +25,20 @@ npt_purpose <- fins_data %>%
   summarise(count = sum(Count)) %>%
   spread (key = Purpose, value = count)
 #------------------------------------------------------------------------------
-# Create list of mortality types
+# Create list of MORTALITY types
 all.morts <- c('Trap Mort', 'DOA', 'Killed')
 
 # Summarize count of Killed, Trap Mort, DOA and Total dead fish records
 npt_deadfish <- fins_data %>%
   filter(`Living Status` %in% all.morts) %>%
-  group_by(weir, Trap_Year, `Living Status`, Species, `Moved To Facility`) %>%
+  group_by(weir, Trap_Year, `Living Status`, Species) %>%
   summarise(morts = sum(Count)) %>%
   spread(key = `Living Status`, value = morts, fill = 0 ) %>%
   select(Weir = weir, Trap_Year, Species, `Trap Mort`, DOA, Killed) %>%
   mutate(Total_morts = `Trap Mort` + DOA + Killed) %>%
   arrange(Weir, desc(Trap_Year))
+
+# Removed `Moved To Facility` from group_by - re-introduce if you need it. #
 
 # Save npt_deadfish as a CSV
 write.csv(npt_deadfish, file = './data/npt_mortalities.csv')

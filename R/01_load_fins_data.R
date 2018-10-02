@@ -47,3 +47,6 @@ fins_data <- data %>%
 #------------------------------------------------------------------------------
 # Save modified fins data
 save(fins_data, file = './data/fins_data.Rda')
+
+write.csv(fins_data, file = './data/fins_data.csv')
+
