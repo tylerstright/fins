@@ -33,12 +33,12 @@ npt_carcass <- temp %>%
 carcass_recaps <- npt_carcass  %>%
   filter(Recapture == 'Yes') %>%
   group_by(StreamName, POP_NAME, Trap_Year) %>%
-  summarise(Carcass_recaptures = n())            
+  summarise(carcass_recaptures = n())            
 
 carcass_caps <- npt_carcass  %>%
   filter(Recapture == 'No') %>%
   group_by(StreamName, POP_NAME, Trap_Year) %>%
-  summarise(Carcass_unmarked = n())            
+  summarise(carcass_unmarked = n())            
 
 tmpnpt_sgs <- left_join(carcass_recaps, carcass_caps)
 #------------------------------------------------------------------------------
@@ -63,58 +63,59 @@ ODFWSGS <- rawODFWdata %>%
          StreamName = River) %>%
   filter(StreamName == 'Lostine River')
 
+# GRSME: filter for Radio Tags and Carcass Recaps (LOP Present)
 tmpODFWSGS <- left_join(ODFWSGS, lostine_protocol) %>%
-  mutate(Recap = ifelse(str_detect(`Opercle Punch Type`, mark_type), TRUE, FALSE))
+  mutate(Recap = ifelse(str_detect(`Opercle Punch Type`, 'LOP'), TRUE, FALSE)) %>%    # only X LOP are considered Recaps
+  filter(!grepl('Radio', Comments, ignore.case = TRUE))
+
 #------------------------------------------------------------------------------
-# Summarize (ODFW) Lostine River SGS for captures and recaptures
+# Summarize (ODFW) Lostine River SGS for captures and recaptures ***ABOVE WEIR***
+aboveweir.list <- c('Above Weir', 'Diversion', 'Lostine Weir') 
+
 lostine_captures <- tmpODFWSGS %>%
-  filter(Recap == 'FALSE') %>%
+  filter(Recap == 'FALSE',
+         AboveOrBelowWeir %in%  aboveweir.list) %>%    # does this filter include the correct carcasses?
   group_by(StreamName, Trap_Year) %>%
-  summarise(Carcass_unmarked = n()) 
+  summarise(carcass_unmarked = n()) 
 
 lostine_recaps <- tmpODFWSGS %>%
-  filter(Recap == 'TRUE') %>%
+  filter(Recap == 'TRUE',
+         AboveOrBelowWeir %in%  aboveweir.list) %>%
   group_by(StreamName, Trap_Year) %>%
-  summarise(Carcass_recaptures = n())
+  summarise(carcass_recaptures = n())
 
 lostine_sgs <- left_join(lostine_captures, lostine_recaps)
 #------------------------------------------------------------------------------
 # Join NPT SGS and ODFW (Lostine) SGS summaries
 sgs_cr <- bind_rows(tmpnpt_sgs, lostine_sgs)
 
+#==============================================================================
 #------------------------------------------------------------------------------
 # Get number of upstream fish that were released with a mark
 chinook_marks <- fins_data %>%
   filter(Species == 'Chinook') %>%
-  filter(`Moved To` == 'Upstream') %>%
-  filter(Marks == "TRUE") %>%
-  filter(Recap != 'TRUE') %>%
+#  filter(`Moved To` == 'Upstream') %>%   #replaced by 'above_below'
+  filter(above_below == 'Above') %>%
+#  filter(Marks == "TRUE") %>%     # Indicates it was given ANY of the marks/tags used that year.
+  filter(Recap != 'TRUE') %>%    # *** Lostine can have Upstream moving Recaps (Recycled/Fisheries Fish)
   group_by(weir, StreamName, Trap_Year) %>%
-  summarise(Weir_marks = sum(Count))
-#------------------------------------------------------------------------------
-# Get number of downstream moving fish without marks = Captures - doesn't include recaptures
-#  captures <- fins_data %>%
-#  filter(Species == 'Chinook') %>%
-#  filter(`Moved To` == 'Downstream') %>%
-#  #filter(Marks == FALSE) %>% # no applied marks
-#  filter(Recap == FALSE) %>% # first fish handle
-#  group_by(weir, StreamName, Trap_Year) %>%
-#  summarise(Weir_captures = sum(Count))
-# chinook_mc <- left_join(marks, captures)
+  summarise(weir_marks = sum(Count))
+
 #------------------------------------------------------------------------------
 # Join summarized weir mark data with summarized SGS data, calculate estimates
 chinook_mcr <- left_join(chinook_marks, sgs_cr) %>%
-  select(weir, StreamName, POP_NAME, Trap_Year, Weir_marks, Carcass_recaptures, Carcass_unmarked) %>%
-  mutate(Carcass_unmarked = ifelse(is.na(Carcass_unmarked), 0, Carcass_unmarked),
-         Carcass_recaptures = ifelse(is.na(Carcass_recaptures), 0, Carcass_recaptures),
-         n1 = Weir_marks,
-         n2 = Carcass_recaptures + Carcass_unmarked,
-         m2 = Carcass_recaptures,
+  select(weir, StreamName, POP_NAME, Trap_Year, weir_marks, carcass_recaptures, carcass_unmarked) %>%
+  mutate(carcass_unmarked = ifelse(is.na(carcass_unmarked), 0, carcass_unmarked),
+         carcass_recaptures = ifelse(is.na(carcass_recaptures), 0, carcass_recaptures),
+         n1 = weir_marks,
+         n2 = carcass_recaptures + carcass_unmarked,
+         m2 = carcass_recaptures,
          Nhat = (((n1 + 1)*(n2 + 1))/(m2 + 1)) - 1,
          Vhat = ((n1+1)*(n2+1)*(n1-m2)*(n2-m2))/((m2+1)^2*(m2+2)),
          lower95 = Nhat - 1.96*sqrt(Vhat),
          upper95 = Nhat + 1.96*sqrt(Vhat))
 
+#==============================================================================
 #------------------------------------------------------------------------------
 #  ggplot(chinook_mcr, aes(x = Trap_Year, y = Nhat, colour = weir)) +
 #    geom_point(size = 2, position = position_dodge(width = .2)) +

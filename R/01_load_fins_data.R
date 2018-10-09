@@ -33,12 +33,13 @@ StreamName <- c('Lolo Creek', 'Joseph Creek', 'Camp Creek', 'Imnaha River',
 streams <- data.frame(weir, StreamName)
 
 #------------------------------------------------------------------------------
-# Combine fins data with protocol, StreamName, and create useable dataset
+# Combine fins data w/ protocol, StreamName, AB_weir. Create useable dataset.
 fins_data <- data %>%
   separate(Trap, into = c("weir", "Trap"), sep = " - ") %>%
   mutate(Trap_Year = year(`Trapped Date`)) %>%
   left_join(mt_protocol) %>%
   left_join(streams) %>%
+  left_join(AB_weir) %>%   
   mutate(Marks = ifelse(str_detect(`Applied Marks`, mark_type), TRUE,
                         ifelse(str_detect(`Applied Tags`, tag_type), TRUE,
                                ifelse(str_detect(`Applied PIT`, tag_type), TRUE, FALSE))))

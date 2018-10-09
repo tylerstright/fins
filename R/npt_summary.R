@@ -17,16 +17,16 @@ purpose.list <- c('Biological Sampling', 'Brood Stock', 'Distribution',
                   'Nutrient Enhancement', 'Other', 'Recycled', 'Stray Removal', 
                   'Stray Relocation', 'Stray Removal Distribution', 'Unknown', 
                   'Within FINS Facility', NA)
+
 # Summarize count of fish with same "Purpose"
 npt_purpose <- fins_data %>%
   filter(Purpose %in% purpose.list) %>%
-  #filter(is.na(Purpose)) %>%
   group_by(weir, Trap_Year, Purpose, Species, `Moved To Facility`) %>%
   summarise(count = sum(Count)) %>%
-  spread (key = Purpose, value = count)
+  spread (key = Purpose, value = count, fill = "")
 #------------------------------------------------------------------------------
 # Create list of MORTALITY types
-all.morts <- c('Trap Mort', 'DOA', 'Killed')
+all.morts <- c('TrapMort', 'DOA', 'Killed')
 
 # Summarize count of Killed, Trap Mort, DOA and Total dead fish records
 npt_deadfish <- fins_data %>%
@@ -34,20 +34,20 @@ npt_deadfish <- fins_data %>%
   group_by(weir, Trap_Year, `Living Status`, Species) %>%
   summarise(morts = sum(Count)) %>%
   spread(key = `Living Status`, value = morts, fill = 0 ) %>%
-  select(Weir = weir, Trap_Year, Species, `Trap Mort`, DOA, Killed) %>%
-  mutate(Total_morts = `Trap Mort` + DOA + Killed) %>%
-  arrange(Weir, desc(Trap_Year))
+  select(weir, Trap_Year, Species, TrapMort, DOA, Killed) %>%
+  mutate(Total_morts = TrapMort + DOA + Killed) %>%
+  arrange(weir, desc(Trap_Year))
 
-# Removed `Moved To Facility` from group_by - re-introduce if you need it. #
 
 # Save npt_deadfish as a CSV
 write.csv(npt_deadfish, file = './data/npt_mortalities.csv')
 
 
 #------------------------------------------------------------------------------
-# Joins two tables to create a count for all mortalities and fish destined for 
-# the same purpose
+# Join Purpose and Mortality Summaries
 npt_summary <- left_join(npt_purpose, npt_deadfish)
 
 # Save npt_summary as a CSV
 write.csv(npt_summary, file = './data/npt_summary.csv')
+
+
