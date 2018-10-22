@@ -5,27 +5,12 @@
 # Author: Tyler Stright
 # Created: 8/15/18
 #------------------------------------------------------------------------------
-# load packages and FINS/NPT carcass data
-library(tidyverse)
-library(RODBC)
-#------------------------------------------------------------------------------
-# Create connection with database
-con <- odbcConnect('sgs_master', uid = 'guest', pwd = 'guest') # named dsn in admin tools.
-#------------------------------------------------------------------------------
 # Extract SQL carcass and transect database table  via above (con)nection
 sql_carcassdetail <- sqlFetch(con, 'carcass_detail')
-sql_transect_metadata <- sqlFetch(con, 'transect_metadata')
+
 #------------------------------------------------------------------------------
-# Create dataframe to add 'weir' to transect metadata based on POP_NAME
-POP_NAME <- c('East Fork South Fork Salmon River', 'Lolo Creek','Snake River 
-              Lower Mainstem', 'Upper South Fork Clearwater','Secesh River', 
-              'South Fork Salmon River mainstem')
-weir <- c('Johnson Creek Weir', 'Lolo Creek Weir', 'Lower Granite Dam', 
-          'Newsome Creek Weir', 'Secesh DIDSON', 'SFSR Weir')
-POP_weir <- data.frame(POP_NAME, weir)
-#------------------------------------------------------------------------------
-# Join carcass, transect, and POP_weir
-sql_ctw <- left_join(sql_transect_metadata, POP_weir) %>%
+# Join carcass, transect, and streams[df]
+raw_carcass <- left_join(sql_transect_metadata, streams) %>%
   select(StreamName, weir, POP_NAME, TransectName, AboveWeir) %>%
   group_by(StreamName, POP_NAME, weir, AboveWeir) %>%
   inner_join(sql_carcassdetail) %>%   # inner join
@@ -35,54 +20,52 @@ sql_ctw <- left_join(sql_transect_metadata, POP_weir) %>%
 
 #------------------------------------------------------------------------------
 #   Calculate Hatchery Fraction (ORIGIN)
-nat_spawn <- sql_ctw %>%    
+nat_spawn <- raw_carcass %>%    
   filter(VerifiedOrigin == 'Natural') %>%
   summarise(natural_spawners = sum(Count))
 
-hat_spawn <- sql_ctw %>%
+hatchery_fraction <- raw_carcass %>%
   filter(VerifiedOrigin == 'Hatchery') %>%
-  summarise(hatchery_spawners = sum(Count))
+  summarise(hatchery_spawners = sum(Count)) %>%
+  right_join(nat_spawn)
 
-hatchery_fraction <- left_join(nat_spawn, hat_spawn)
 #------------------------------------------------------------------------------
 # Calculate Pre-spawn mortality
-prespawn_mortality <- sql_ctw %>%
+prespawn_mortality <- raw_carcass %>%
   group_by(POP_NAME, Trap_Year) %>%
   filter(Spawned == 'No') %>%
   summarise(prespawn_morts = sum(Count))
 #------------------------------------------------------------------------------
 # Sum TOTAL carcasses observed both upstream and downstream
-all_carcass <- sql_ctw %>%
+all_carcass <- raw_carcass %>%
   summarise(all_carcasses = sum(Count))
 #------------------------------------------------------------------------------
 #   Calculating Percent Females for Upsteam (us) of weir 
-f_us_carcass <- sql_ctw %>%    
+f_us_carcass <- raw_carcass %>%    
   filter(AboveWeir == 'Yes', 
          Sex == 'Female') %>%       
   summarise(us_female_carcass = sum(Count))
 
-m_us_carcass <- sql_ctw %>%
+us_carcasses <- raw_carcass %>%
   filter(AboveWeir == 'Yes',
          Sex == 'Male') %>%
-  summarise(us_male_carcass = sum(Count))
-
-f_us <- left_join(f_us_carcass, m_us_carcass)
+  summarise(us_male_carcass = sum(Count)) %>%
+  right_join(f_us_carcass)
 #------------------------------------------------------------------------------
 #   Calculating Percent Females for Downstream (ds) of weir 
-f_ds_carcass <- sql_ctw %>%    
+f_ds_carcass <- raw_carcass %>%    
   filter(AboveWeir == 'No', 
          Sex == 'Female') %>%       
   summarise(ds_female_carcass = sum(Count))
 
-m_ds_carcass <- sql_ctw %>%
+ds_carcasses <- raw_carcass %>%
   filter(AboveWeir == 'No',
          Sex == 'Male') %>%
-  summarise(ds_male_carcass = sum(Count))
-
-f_ds <- left_join(f_ds_carcass, m_ds_carcass)
+  summarise(ds_male_carcass = sum(Count)) %>%
+  right_join(f_ds_carcass)
 #------------------------------------------------------------------------------
 ## Join Sex, Origin, & Prespawn Mortality
-origin_sexMOD <- full_join(f_us, f_ds)%>%
+carcass_origin_sex <- full_join(us_carcasses, ds_carcasses)%>%
   left_join(hatchery_fraction) %>%
   left_join(prespawn_mortality) %>%
   left_join(all_carcass) %>%
@@ -105,3 +88,5 @@ origin_sexMOD <- full_join(f_us, f_ds)%>%
   mutate(prespawn_morts = ifelse(is.na(prespawn_morts), 0, prespawn_morts)) %>%
   mutate(prespawnmort_percent = prespawn_morts/(ds_female_carcass + us_female_carcass))
 #------------------------------------------------------------------------------
+# save(carcass_origin_sex, file = './data/carcass_origin_sex.Rda')
+

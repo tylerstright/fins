@@ -5,13 +5,7 @@
 # Author: Tyler Stright
 # Created: 8/8/18
 #------------------------------------------------------------------------------
-# load packages and FINS data
-library(tidyverse)
-
-load(file = './data/fins_data.Rda')
-
-#------------------------------------------------------------------------------
-# create list of purposes for Summary.
+# Create list of FINS purposes for Summary.
 purpose.list <- c('Biological Sampling', 'Brood Stock', 'Distribution', 
                   'Fisheries','General Holding', 'Natural Spawning', 
                   'Nutrient Enhancement', 'Other', 'Recycled', 'Stray Removal', 
@@ -39,15 +33,27 @@ npt_deadfish <- fins_data %>%
   arrange(weir, desc(Trap_Year))
 
 
-# Save npt_deadfish as a CSV
-write.csv(npt_deadfish, file = './data/npt_mortalities.csv')
-
+#------------------------------------------------------------------------------
+# Summarize Out-planted fish
+npt_outplants <- fins_data %>%
+  filter(grepl('Outplant', `Moved To`)) %>% 
+  group_by(weir, Trap_Year, Species, `Moved To`, Disposition, Purpose) %>%
+  summarise(count = n()) %>%
+  separate(`Moved To`, into = c('Action', 'Release_location'), sep = " - ") %>%
+  separate(Release_location, into = c('Release_stream', 'location'), sep = ": ") %>%
+  select(-Action, Release_location = location) %>%
+  arrange(Trap_Year) %>%
+  ungroup() %>%
+  group_by(Weir = weir, Trap_Year, Species, Release_stream) %>%
+  summarise(n = sum(count))
 
 #------------------------------------------------------------------------------
 # Join Purpose and Mortality Summaries
-npt_summary <- left_join(npt_purpose, npt_deadfish)
+npt_summary <- left_join(npt_purpose, npt_deadfish) %>%
+  left_join(npt_outplants)
 
+#------------------------------------------------------------------------------
 # Save npt_summary as a CSV
-write.csv(npt_summary, file = './data/npt_summary.csv')
+# write.csv(npt_summary, file = './data/npt_summary.csv')
 
 

@@ -5,21 +5,17 @@
 # Author: Tyler Stright
 # Created: 7/30/18
 #------------------------------------------------------------------------------
-# load packages and FINS data
-library(tidyverse)
-load(file = './data/fins_data.Rda')
-#------------------------------------------------------------------------------
 # Get number of upstream fish that were released with a mark
-marks <- fins_data %>%
+sth_marks <- fins_data %>%
   filter(Species == 'Steelhead') %>%
   filter(`Moved To` == 'Upstream') %>%
-  filter(Marks == "TRUE") %>%
+  filter(Marks == "TRUE") %>%             # Is this working as intended?
   filter(Recap != 'TRUE') %>%
   group_by(weir, Trap_Year) %>%
   summarise(Marks = sum(Count))
 #------------------------------------------------------------------------------
 # Get number of downstream moving fish without marks: Captures
-captures <- fins_data %>%
+sth_captures <- fins_data %>%
   filter(Species == 'Steelhead') %>%
   filter(`Moved To` == 'Downstream') %>%
   filter(Recap == FALSE) %>% 
@@ -27,21 +23,21 @@ captures <- fins_data %>%
   summarise(Captures = sum(Count))
 #------------------------------------------------------------------------------
 # Get number of downstream moving fish with marks = Recaptures
-recaptures<- fins_data %>%
+sth_recaptures<- fins_data %>%
   filter(Species == 'Steelhead') %>%
   filter(`Moved To` == 'Downstream') %>%
   filter(Recap == 'TRUE') %>%
-  mutate(fishid = as.character(1:n()),  # create unique fish id
+  mutate(fishid = as.character(1:n()),  # Assign Unique ID#
          UniqueFishID = (ifelse(!is.na(`Existing PIT`), `Existing PIT`, fishid))) %>%
   select(-fishid) %>%
-  arrange(desc(UniqueFishID), `Trapped Date`) %>% # arrange in order of capture events
+  arrange(desc(UniqueFishID), `Trapped Date`) %>%
   distinct(UniqueFishID, .keep_all = TRUE) %>% # keep first (by datetime) recapture event
   group_by(weir, Trap_Year) %>%
   summarise(Recaptures = sum(Count))
 #------------------------------------------------------------------------------
 # Join dataframes and make calculations   
-steelhead_mcr <- left_join(marks, captures) %>%
-  left_join(recaptures) %>%
+steelhead_mcr <- left_join(sth_marks, sth_captures) %>%
+  left_join(sth_recaptures) %>%
   mutate(Captures = ifelse(is.na(Captures), 0, Captures),
          Recaptures = ifelse(is.na(Recaptures), 0, Recaptures),
          n1 = Marks,
@@ -53,11 +49,11 @@ steelhead_mcr <- left_join(marks, captures) %>%
          upper95 = Nhat + 1.96*sqrt(Vhat)) 
 #------------------------------------------------------------------------------
 # Graph
-ggplot(steelhead_mcr, aes(x = Trap_Year, y = Nhat, colour = weir)) +
-  geom_point(size = 2, position = position_dodge(width = .2)) +
-  geom_errorbar(aes(ymin = lower95, ymax = upper95), position = position_dodge(width = .2)) +
-  facet_wrap(~weir, scale = 'free_y', drop = TRUE) +
-  theme_bw()
+#ggplot(steelhead_mcr, aes(x = Trap_Year, y = Nhat, colour = weir)) +
+#  geom_point(size = 2, position = position_dodge(width = .2)) +
+#  geom_errorbar(aes(ymin = lower95, ymax = upper95), position = position_dodge(width = .2)) +
+#  facet_wrap(~weir, scale = 'free_y', drop = TRUE) +
+#  theme_bw()
 #------------------------------------------------------------------------------
 # Save steelhead_mcr as a CSV
-write.csv(steelhead_mcr, file = './data/steelhead_mcr.csv')
+# write.csv(steelhead_mcr, file = './data/steelhead_mcr.csv')
