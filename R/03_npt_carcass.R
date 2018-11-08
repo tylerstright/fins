@@ -5,7 +5,7 @@
 # Author: Tyler Stright
 # Created: 8/15/18
 #------------------------------------------------------------------------------
-# Extract SQL carcass and transect database table  via above (con)nection
+# Extract SQL carcass data 
 sql_carcassdetail <- sqlFetch(con, 'carcass_detail')
 
 #------------------------------------------------------------------------------
@@ -13,7 +13,7 @@ sql_carcassdetail <- sqlFetch(con, 'carcass_detail')
 raw_carcass <- left_join(sql_transect_metadata, streams) %>%
   select(StreamName, weir, POP_NAME, TransectName, AboveWeir) %>%
   group_by(StreamName, POP_NAME, weir, AboveWeir) %>%
-  inner_join(sql_carcassdetail) %>%   # inner join
+  inner_join(sql_carcassdetail) %>%                       # inner join
   mutate(Trap_Year = SurveyYear) %>%
   ungroup() %>%
   group_by(POP_NAME, Trap_Year)
